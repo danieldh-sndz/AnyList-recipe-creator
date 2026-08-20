@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Recipe to AnyList</title>
+    <meta name="description" content="Paste an AI-written recipe and get a file AnyList can import." />
+    <meta name="theme-color" content="#b4451f" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1b1512" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Recipe to AnyList" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/icon-180.png" />
+    <link rel="icon" href="icons/icon-192.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-bar">
+      <h1>
+        <span class="mark" aria-hidden="true"></span>
+        Recipe to AnyList
+      </h1>
+      <button type="button" class="link-button" id="help-toggle" aria-expanded="false" aria-controls="help">
+        How to import
+      </button>
+    </header>
+
+    <section id="help" class="help" hidden>
+      <h2>Getting the file into AnyList</h2>
+      <ol>
+        <li>Paste your recipe here and tap <strong>Read recipe</strong>.</li>
+        <li>Check the fields, then tap <strong>Save to library</strong>.</li>
+        <li>On the Library tab, tap <strong>Export</strong> to save a <code>.paprikarecipes</code> file to Files.</li>
+        <li>
+          Open AnyList's <strong>Recipe Import</strong> page in Safari, sign in, choose the file you
+          just saved, and tap Import Recipes. The steps are on
+          <a href="https://help.anylist.com/articles/paprika-import/" target="_blank" rel="noopener">AnyList's help page</a>.
+        </li>
+      </ol>
+      <p class="fine-print">
+        AnyList reads the Paprika recipe format, so that is what this app writes. Everything happens
+        on your phone — no recipe text is ever uploaded anywhere.
+      </p>
+    </section>
+
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-paste" aria-controls="view-paste" aria-selected="true">Paste</button>
+      <button type="button" role="tab" id="tab-review" aria-controls="view-review" aria-selected="false">Review</button>
+      <button type="button" role="tab" id="tab-library" aria-controls="view-library" aria-selected="false">
+        Library <span class="count" id="library-count">0</span>
+      </button>
+    </nav>
+
+    <main>
+      <!-- ------------------------------------------------------------ -->
+      <section id="view-paste" role="tabpanel" aria-labelledby="tab-paste" class="view is-active">
+        <label class="field">
+          <span class="field-label">Recipe text</span>
+          <textarea
+            id="input"
+            rows="14"
+            placeholder="Paste the recipe your AI assistant wrote here — Markdown, plain text, bullets or numbered steps all work."
+            spellcheck="false"
+            autocapitalize="off"
+          ></textarea>
+        </label>
+
+        <div class="button-row">
+          <button type="button" class="primary" id="parse">Read recipe</button>
+          <button type="button" id="paste-clipboard">Paste from clipboard</button>
+        </div>
+        <div class="button-row">
+          <button type="button" class="quiet" id="load-sample">Try an example</button>
+          <button type="button" class="quiet" id="clear-input">Clear</button>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------------------ -->
+      <section id="view-review" role="tabpanel" aria-labelledby="tab-review" class="view">
+        <p class="empty" id="review-empty">
+          Nothing to review yet. Paste a recipe on the Paste tab and tap <strong>Read recipe</strong>.
+        </p>
+
+        <form id="review-form" hidden>
+          <label class="field">
+            <span class="field-label">Title</span>
+            <input type="text" id="f-title" autocapitalize="words" />
+          </label>
+
+          <label class="field">
+            <span class="field-label">Description</span>
+            <textarea id="f-description" rows="2"></textarea>
+          </label>
+
+          <div class="grid">
+            <label class="field">
+              <span class="field-label">Servings</span>
+              <input type="text" id="f-servings" inputmode="numeric" />
+            </label>
+            <label class="field">
+              <span class="field-label">Prep time</span>
+              <input type="text" id="f-prepTime" />
+            </label>
+            <label class="field">
+              <span class="field-label">Cook time</span>
+              <input type="text" id="f-cookTime" />
+            </label>
+            <label class="field">
+              <span class="field-label">Total time</span>
+              <input type="text" id="f-totalTime" />
+            </label>
+          </div>
+
+          <label class="field">
+            <span class="field-label">
+              Ingredients
+              <span class="hint" id="count-ingredients"></span>
+            </span>
+            <textarea id="f-ingredients" rows="9" spellcheck="false"></textarea>
+            <span class="hint">One per line. A line like “For the sauce” becomes a heading in AnyList.</span>
+          </label>
+
+          <label class="field">
+            <span class="field-label">
+              Directions
+              <span class="hint" id="count-directions"></span>
+            </span>
+            <textarea id="f-directions" rows="10"></textarea>
+            <span class="hint">One step per line.</span>
+          </label>
+
+          <label class="field">
+            <span class="field-label">Notes</span>
+            <textarea id="f-notes" rows="3"></textarea>
+          </label>
+
+          <details class="more">
+            <summary>More fields</summary>
+            <label class="field">
+              <span class="field-label">Nutrition</span>
+              <textarea id="f-nutrition" rows="2"></textarea>
+            </label>
+            <label class="field">
+              <span class="field-label">Categories</span>
+              <input type="text" id="f-categories" />
+              <span class="hint">Comma separated.</span>
+            </label>
+            <label class="field">
+              <span class="field-label">Source</span>
+              <input type="text" id="f-source" />
+            </label>
+            <label class="field">
+              <span class="field-label">Source URL</span>
+              <input type="url" id="f-sourceUrl" inputmode="url" autocapitalize="off" />
+            </label>
+          </details>
+
+          <div class="button-row sticky">
+            <button type="submit" class="primary" id="save-recipe">Save to library</button>
+            <button type="button" id="export-current">Export this one</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ------------------------------------------------------------ -->
+      <section id="view-library" role="tabpanel" aria-labelledby="tab-library" class="view">
+        <p class="empty" id="library-empty">
+          No saved recipes yet. Recipes you save are kept on this device so you can export several at once.
+        </p>
+
+        <div id="library-tools" class="library-tools" hidden>
+          <button type="button" class="quiet" id="select-all">Select all</button>
+          <button type="button" class="quiet" id="select-none">Select none</button>
+        </div>
+
+        <ul class="recipe-list" id="library-list"></ul>
+
+        <div class="button-row sticky" id="library-actions" hidden>
+          <button type="button" class="primary" id="export-selected">Export selected</button>
+          <button type="button" id="share-selected" hidden>Share</button>
+          <button type="button" class="danger" id="delete-selected">Delete</button>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "anylist-recipe-creator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Turn pasted AI recipes into a file AnyList can import.",
+  "scripts": {
+    "test": "node tests/run.mjs"
+  }
+}

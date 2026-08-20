@@ -1,0 +1,463 @@
+/* iPhone-first layout. Everything sizes from system fonts and respects the
+   safe-area insets so the app looks right when added to the Home Screen. */
+
+:root {
+  --bg: #fbf7f4;
+  --surface: #ffffff;
+  --surface-2: #f3ece7;
+  --text: #24160f;
+  --text-dim: #74655c;
+  --border: #e3d8d0;
+  --accent: #b4451f;
+  --accent-text: #ffffff;
+  --danger: #a32020;
+  --shadow: 0 1px 2px rgba(53, 30, 18, 0.08), 0 8px 24px rgba(53, 30, 18, 0.06);
+  --radius: 14px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171210;
+    --surface: #221b18;
+    --surface-2: #2d2420;
+    --text: #f4ece7;
+    --text-dim: #ab9a90;
+    --border: #3a2f2a;
+    --accent: #ef7847;
+    --accent-text: #2a1206;
+    --danger: #f0736b;
+    --shadow: none;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  padding-bottom: env(safe-area-inset-bottom);
+  overscroll-behavior-y: contain;
+}
+
+/* ---------------------------------------------------------------- app bar */
+
+.app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-bar h1 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.mark {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 6px;
+  background: var(--accent);
+  position: relative;
+}
+
+.mark::before,
+.mark::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent-text);
+}
+
+.mark::before {
+  top: 7px;
+}
+
+.mark::after {
+  top: 12px;
+  right: 9px;
+}
+
+/* ------------------------------------------------------------------- help */
+
+.help {
+  margin: 0;
+  padding: 16px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.help h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.help ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.help li {
+  margin-bottom: 6px;
+}
+
+.help a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.fine-print {
+  margin: 12px 0 0;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+/* ------------------------------------------------------------------- tabs */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 10px 12px 0;
+}
+
+.tabs button {
+  flex: 1;
+  padding: 9px 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.tabs button[aria-selected='true'] {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.count {
+  display: inline-block;
+  min-width: 19px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 19px;
+  vertical-align: 1px;
+}
+
+.count:empty,
+.count[data-zero='true'] {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ views */
+
+main {
+  padding: 14px 12px 32px;
+}
+
+.view {
+  display: none;
+}
+
+.view.is-active {
+  display: block;
+}
+
+.empty {
+  margin: 24px 8px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* ----------------------------------------------------------------- fields */
+
+.field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.field-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hint {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-dim);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.field-label .hint {
+  margin-top: 0;
+}
+
+/* Checkboxes are excluded: the reset below strips their native appearance and
+   a ticked box then looks exactly like an empty one. */
+input:not([type='checkbox']),
+textarea {
+  display: block;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  /* 16px keeps iOS from zooming the page when a field takes focus. */
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-appearance: none;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 44px;
+}
+
+#input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 15px;
+}
+
+input:not([type='checkbox']):focus,
+textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 10px;
+}
+
+.more {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.more summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.more[open] summary {
+  margin-bottom: 12px;
+}
+
+.more .field:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.button-row.sticky {
+  position: sticky;
+  bottom: calc(env(safe-area-inset-bottom) + 8px);
+  z-index: 4;
+  margin-top: 18px;
+  padding: 10px 0;
+  /* Opaque, so fields scrolling underneath do not show through the buttons. */
+  background: var(--bg);
+  box-shadow: 0 -14px 18px -8px var(--bg);
+}
+
+button {
+  flex: 1;
+  min-height: 46px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button.primary {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+button.quiet {
+  box-shadow: none;
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-dim);
+  font-weight: 500;
+  min-height: 38px;
+}
+
+button.danger {
+  color: var(--danger);
+  flex: 0 0 auto;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.link-button {
+  flex: none;
+  min-height: 0;
+  padding: 6px 10px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- library */
+
+.library-tools {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.recipe-list {
+  list-style: none;
+  margin: 0 0 4px;
+  padding: 0;
+}
+
+.recipe-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.recipe-item input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  margin: 2px 0 0;
+  flex: none;
+  accent-color: var(--accent);
+}
+
+.recipe-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.recipe-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.recipe-meta {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.recipe-edit {
+  flex: none;
+  min-height: 0;
+  padding: 6px 10px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--accent);
+  font-size: 14px;
+}
+
+/* ------------------------------------------------------------------ toast */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom) + 22px);
+  transform: translateX(-50%);
+  z-index: 20;
+  max-width: min(92vw, 460px);
+  padding: 11px 18px;
+  border-radius: 22px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 14px;
+  font-weight: 550;
+  text-align: center;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+
+@media (min-width: 640px) {
+  main,
+  .help,
+  .tabs {
+    max-width: 620px;
+    margin-inline: auto;
+  }
+}
