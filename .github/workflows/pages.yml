@@ -1,8 +1,11 @@
 name: Deploy to GitHub Pages
 
+# The github-pages environment allows deploys from the repository's default
+# branch. Until the default branch is switched to main, deploys also run from
+# the original branch so the site stays live either way.
 on:
   push:
-    branches: [main]
+    branches: [main, claude/iphone-recipe-anylist-import-sooyca]
   workflow_dispatch:
 
 permissions:
