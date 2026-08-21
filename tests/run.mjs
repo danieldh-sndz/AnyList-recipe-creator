@@ -355,6 +355,65 @@ await check('export file names use the required extension', () => {
   eq(exportFileName([{ title: 'Soup/Stew: 100% "Best"' }]), 'Soup Stew 100% Best.paprikarecipes', 'sanitised');
 });
 
+// --------------------------------------------------------------------------
+// Photo embedding
+// --------------------------------------------------------------------------
+
+// A real 1x1 JPEG so the bytes have a valid JPEG header after decoding.
+const TINY_JPEG =
+  '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/9oADAMBAAIRAxEAPwD3+iiigD/9k=';
+
+await check('paprika document embeds the dish photo', () => {
+  const doc = toPaprikaRecipe({ ...recipeA, photoData: `data:image/jpeg;base64,${TINY_JPEG}` });
+  eq(doc.photo_data, TINY_JPEG, 'photo_data is the raw base64');
+  eq(doc.photo, `${doc.uid}.jpg`, 'photo filename derives from the uid');
+  ok(/^[0-9a-f]{64}$/.test(doc.photo_hash), 'photo_hash is 64 hex chars');
+  const bytes = Buffer.from(doc.photo_data, 'base64');
+  ok(bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff, 'decodes to JPEG magic bytes');
+});
+
+await check('paprika document without a photo keeps the photo fields null', () => {
+  const doc = toPaprikaRecipe(recipeA);
+  eq(doc.photo, null, 'photo');
+  eq(doc.photo_data, null, 'photo_data');
+  eq(doc.photo_hash, null, 'photo_hash');
+});
+
+await check('a non-image photoData value is ignored, not exported', () => {
+  const doc = toPaprikaRecipe({ ...recipeA, photoData: 'javascript:alert(1)' });
+  eq(doc.photo_data, null, 'photo_data stays null');
+});
+
+await check('the photo survives the archive round trip', async () => {
+  const withPhoto = { ...recipeA, photoData: `data:image/jpeg;base64,${TINY_JPEG}` };
+  const path = await writeArchive([withPhoto], 'photo.paprikarecipes');
+  execFileSync('unzip', ['-t', path]);
+  const dest = join(workDir, 'photo-extract');
+  execFileSync('unzip', ['-o', '-q', path, '-d', dest]);
+  const [file] = readdirSync(dest);
+  const doc = JSON.parse(
+    execFileSync('gunzip', ['-c'], { input: readFileSync(join(dest, file)), encoding: 'utf8' }),
+  );
+  eq(doc.photo_data, TINY_JPEG, 'photo_data round trips through gzip and zip');
+});
+
+// --------------------------------------------------------------------------
+// Claude client: schema and message mapping (no network)
+// --------------------------------------------------------------------------
+
+const { RECIPE_SCHEMA } = await import('../js/claude.js');
+
+await check('recipe schema is valid for structured outputs', () => {
+  eq(RECIPE_SCHEMA.type, 'object', 'root type');
+  eq(RECIPE_SCHEMA.additionalProperties, false, 'additionalProperties false');
+  const props = Object.keys(RECIPE_SCHEMA.properties);
+  eq([...RECIPE_SCHEMA.required].sort(), [...props].sort(), 'every property is required');
+  // Structured outputs reject numeric/string constraints; make sure none crept in.
+  const banned = ['minimum', 'maximum', 'minLength', 'maxLength', 'multipleOf'];
+  const json = JSON.stringify(RECIPE_SCHEMA);
+  for (const word of banned) ok(!json.includes(`"${word}"`), `schema avoids ${word}`);
+});
+
 rmSync(workDir, { recursive: true, force: true });
 
 console.log(`\n${passed} passed, ${failures.length} failed\n`);

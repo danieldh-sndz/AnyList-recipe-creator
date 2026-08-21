@@ -1,8 +1,10 @@
-// Wires the three tabs together: paste, review, library.
+// Wires the four tabs together: create, paste, review, library.
 
 import { parseRecipe } from './parser.js';
 import { buildPaprikaFile, exportFileName } from './recipe-doc.js';
 import { loadAll, save, remove, getById } from './store.js';
+import { requestRecipe, getApiKey, setApiKey } from './claude.js';
+import { generateDishPhoto } from './imagegen.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -19,7 +21,21 @@ const els = {
   toast: $('toast'),
   help: $('help'),
   helpToggle: $('help-toggle'),
+  settings: $('settings'),
+  settingsToggle: $('settings-toggle'),
+  apiKey: $('api-key'),
+  autoPhoto: $('auto-photo'),
+  keyCard: $('key-card'),
+  chatLog: $('chat-log'),
+  chatInput: $('chat-input'),
+  composer: $('composer'),
+  send: $('send'),
+  chips: $('chips'),
+  photoWrap: $('photo-wrap'),
+  photo: $('photo'),
 };
+
+const AUTO_PHOTO_KEY = 'anylist-recipe-creator/auto-photo';
 
 const TEXT_FIELDS = ['title', 'description', 'servings', 'prepTime', 'cookTime', 'totalTime', 'source', 'sourceUrl'];
 const LIST_FIELDS = ['ingredients', 'directions', 'notes', 'nutrition'];
@@ -58,7 +74,58 @@ for (const tab of document.querySelectorAll('[role="tab"]')) {
 els.helpToggle.addEventListener('click', () => {
   const open = els.help.hidden;
   els.help.hidden = !open;
+  els.settings.hidden = true;
   els.helpToggle.setAttribute('aria-expanded', String(open));
+  els.settingsToggle.setAttribute('aria-expanded', 'false');
+});
+
+/* ---------------------------------------------------------------- settings */
+
+function autoPhotoEnabled() {
+  try {
+    return localStorage.getItem(AUTO_PHOTO_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
+function openSettings() {
+  els.apiKey.value = getApiKey();
+  els.autoPhoto.checked = autoPhotoEnabled();
+  els.settings.hidden = false;
+  els.help.hidden = true;
+  els.settingsToggle.setAttribute('aria-expanded', 'true');
+  els.helpToggle.setAttribute('aria-expanded', 'false');
+  window.scrollTo({ top: 0 });
+}
+
+els.settingsToggle.addEventListener('click', () => {
+  if (els.settings.hidden) {
+    openSettings();
+  } else {
+    els.settings.hidden = true;
+    els.settingsToggle.setAttribute('aria-expanded', 'false');
+  }
+});
+
+$('open-settings').addEventListener('click', openSettings);
+
+$('save-settings').addEventListener('click', () => {
+  const key = els.apiKey.value.trim();
+  if (key && !key.startsWith('sk-ant-')) {
+    toast('That does not look like an Anthropic key (they start with sk-ant-).');
+    return;
+  }
+  setApiKey(key);
+  try {
+    localStorage.setItem(AUTO_PHOTO_KEY, els.autoPhoto.checked ? 'on' : 'off');
+  } catch {
+    /* the toggle just falls back to its default */
+  }
+  els.settings.hidden = true;
+  els.settingsToggle.setAttribute('aria-expanded', 'false');
+  refreshCreateState();
+  toast(key ? 'Settings saved.' : 'API key removed.');
 });
 
 /* ------------------------------------------------------------------ review */
@@ -71,6 +138,7 @@ function fillForm(recipe) {
     $(`f-${key}`).value = Array.isArray(value) ? value.join('\n') : value || '';
   }
   $('f-categories').value = (recipe.categories || []).join(', ');
+  setReviewPhoto(recipe.photoData);
 
   els.reviewEmpty.hidden = true;
   els.reviewForm.hidden = false;
@@ -78,8 +146,25 @@ function fillForm(recipe) {
   autoGrow();
 }
 
+function setReviewPhoto(dataUrl) {
+  if (dataUrl) {
+    els.photo.src = dataUrl;
+    els.photoWrap.hidden = false;
+  } else {
+    els.photo.removeAttribute('src');
+    els.photoWrap.hidden = true;
+  }
+  $('add-photo-row').hidden = Boolean(dataUrl);
+}
+
 function readForm() {
-  const recipe = { id: draft?.id, uid: draft?.uid };
+  const recipe = {
+    id: draft?.id,
+    uid: draft?.uid,
+    // Not editable on the form, but they belong to the recipe being edited.
+    photoData: draft?.photoData,
+    imagePrompt: draft?.imagePrompt,
+  };
   for (const key of TEXT_FIELDS) recipe[key] = $(`f-${key}`).value.trim();
   for (const key of LIST_FIELDS) {
     recipe[key] = $(`f-${key}`)
@@ -169,6 +254,238 @@ $('load-sample').addEventListener('click', () => {
   toast('Example loaded. Tap Read recipe.');
 });
 
+/* ------------------------------------------------------------------ create */
+
+// API-shaped history: user requests and assistant recipe JSON, oldest first.
+let conversation = [];
+let chatBusy = false;
+// Bumped on every new generation and chat reset so a slow photo response
+// can't attach itself to a newer recipe.
+let generation = 0;
+
+function refreshCreateState() {
+  const hasKey = Boolean(getApiKey());
+  els.keyCard.hidden = hasKey;
+  els.composer.hidden = !hasKey;
+  els.chips.hidden = !hasKey || !conversation.some((message) => message.role === 'assistant');
+}
+
+function addBubble(role, contentNode) {
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${role}`;
+  if (typeof contentNode === 'string') {
+    bubble.textContent = contentNode;
+  } else {
+    bubble.append(contentNode);
+  }
+  els.chatLog.append(bubble);
+  bubble.scrollIntoView({ block: 'end' });
+  return bubble;
+}
+
+function recipeCard(recipe) {
+  const card = document.createElement('div');
+  card.className = 'chat-card';
+
+  const img = document.createElement('img');
+  img.className = 'chat-card-photo';
+  img.alt = `Photo of ${recipe.title}`;
+  img.hidden = true;
+
+  const body = document.createElement('div');
+  body.className = 'chat-card-body';
+
+  const title = document.createElement('div');
+  title.className = 'chat-card-title';
+  title.textContent = recipe.title;
+
+  const meta = document.createElement('div');
+  meta.className = 'chat-card-meta';
+  meta.textContent = [
+    recipe.servings && `Serves ${recipe.servings}`,
+    recipe.prepTime && `Prep ${recipe.prepTime}`,
+    recipe.cookTime && `Cook ${recipe.cookTime}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  const photoNote = document.createElement('div');
+  photoNote.className = 'chat-card-note';
+
+  const open = document.createElement('button');
+  open.type = 'button';
+  open.className = 'chat-card-open';
+  open.textContent = 'Review & save';
+  open.addEventListener('click', () => showTab('review'));
+
+  body.append(title, meta, photoNote, open);
+  card.append(img, body);
+  return { card, img, photoNote };
+}
+
+async function attachPhoto(recipe, { img, photoNote }, { seed } = {}) {
+  const token = generation;
+  photoNote.textContent = 'Photographing the dish…';
+  try {
+    const dataUrl = await generateDishPhoto(recipe, seed === undefined ? {} : { seed });
+    if (token !== generation) return; // a newer recipe took over
+    recipe.photoData = dataUrl;
+    if (draft === recipe) setReviewPhoto(dataUrl);
+    img.src = dataUrl;
+    img.hidden = false;
+    photoNote.textContent = '';
+  } catch (error) {
+    if (token !== generation) return;
+    photoNote.textContent = '';
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'chat-card-open';
+    retry.textContent = 'Photo failed — retry';
+    retry.addEventListener('click', () => {
+      retry.remove();
+      attachPhoto(recipe, { img, photoNote });
+    });
+    photoNote.append(retry);
+    console.warn('Dish photo failed:', error);
+  }
+}
+
+function setChatBusy(on) {
+  chatBusy = on;
+  els.send.disabled = on;
+  els.chatInput.disabled = on;
+  if (on) {
+    const dots = document.createElement('span');
+    dots.className = 'dots';
+    dots.innerHTML = '<i></i><i></i><i></i>';
+    addBubble('assistant thinking', dots);
+  } else {
+    els.chatLog.querySelector('.bubble.thinking')?.remove();
+  }
+}
+
+async function sendChat(text) {
+  if (!text.trim() || chatBusy) return;
+  addBubble('user', text.trim());
+  els.chatInput.value = '';
+  growComposer();
+  setChatBusy(true);
+
+  const attempt = [...conversation, { role: 'user', content: text.trim() }];
+  try {
+    const { recipe, assistantContent } = await requestRecipe(attempt);
+    conversation = [...attempt, { role: 'assistant', content: assistantContent }];
+    generation += 1;
+
+    setChatBusy(false);
+    if (recipe.reply) addBubble('assistant', recipe.reply);
+    const parts = recipeCard(recipe);
+    addBubble('assistant card', parts.card);
+
+    fillForm(recipe);
+    refreshCreateState();
+
+    if (autoPhotoEnabled()) {
+      attachPhoto(recipe, parts);
+    }
+  } catch (error) {
+    setChatBusy(false);
+    addBubble('assistant error', error.message);
+    if (error.type === 'no-key') openSettings();
+  }
+}
+
+els.composer.addEventListener('submit', (event) => {
+  event.preventDefault();
+  sendChat(els.chatInput.value);
+});
+
+els.chatInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendChat(els.chatInput.value);
+  }
+});
+
+function growComposer() {
+  els.chatInput.style.height = 'auto';
+  els.chatInput.style.height = `${Math.min(els.chatInput.scrollHeight + 2, 160)}px`;
+}
+els.chatInput.addEventListener('input', growComposer);
+
+els.chips.addEventListener('click', (event) => {
+  const fill = event.target.dataset?.fill;
+  if (!fill) return;
+  if (fill.endsWith(' ')) {
+    // An open-ended chip: let the user finish the sentence.
+    els.chatInput.value = fill;
+    els.chatInput.focus();
+    growComposer();
+  } else {
+    sendChat(fill);
+  }
+});
+
+$('new-chat').addEventListener('click', () => {
+  conversation = [];
+  generation += 1;
+  els.chatLog.textContent = '';
+  setChatBusy(false);
+  refreshCreateState();
+  els.chatInput.focus();
+});
+
+/* -------------------------------------------------------- review photo */
+
+$('regen-photo').addEventListener('click', async () => {
+  if (!draft) return;
+  const recipe = draft;
+  const button = $('regen-photo');
+  button.disabled = true;
+  button.textContent = 'Generating…';
+  try {
+    const dataUrl = await generateDishPhoto(
+      { ...recipe, title: $('f-title').value || recipe.title },
+      { seed: Math.floor(Math.random() * 100000) },
+    );
+    if (draft === recipe) {
+      draft.photoData = dataUrl;
+      setReviewPhoto(dataUrl);
+    }
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'New photo';
+  }
+});
+
+$('remove-photo').addEventListener('click', () => {
+  if (draft) draft.photoData = undefined;
+  setReviewPhoto(null);
+});
+
+$('add-photo').addEventListener('click', async () => {
+  if (!draft) return;
+  const recipe = draft;
+  const button = $('add-photo');
+  button.disabled = true;
+  button.textContent = 'Generating…';
+  try {
+    const current = readForm();
+    const dataUrl = await generateDishPhoto(current);
+    if (draft === recipe) {
+      draft.photoData = dataUrl;
+      setReviewPhoto(dataUrl);
+    }
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Generate a photo of this dish';
+  }
+});
+
 /* ------------------------------------------------------------------ export */
 
 async function exportRecipes(recipes, { share = false } = {}) {
@@ -247,6 +564,13 @@ function renderLibrary() {
 
     const body = document.createElement('div');
     body.className = 'recipe-body';
+    if (recipe.photoData) {
+      const thumb = document.createElement('img');
+      thumb.className = 'recipe-thumb';
+      thumb.src = recipe.photoData;
+      thumb.alt = '';
+      body.append(thumb);
+    }
     const title = document.createElement('div');
     title.className = 'recipe-title';
     title.textContent = recipe.title;
@@ -323,6 +647,7 @@ if (typeof navigator.canShare === 'function') {
 }
 
 renderLibrary();
+refreshCreateState();
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   window.addEventListener('load', () => {

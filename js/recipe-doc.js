@@ -47,7 +47,16 @@ function contentHash(text) {
 
 const joinLines = (value) => (Array.isArray(value) ? value.join('\n') : String(value || ''));
 
+/** Raw base64 payload of a data: URL, or '' when there is no usable photo. */
+function photoBase64(recipe) {
+  const dataUrl = recipe.photoData;
+  if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/')) return '';
+  const comma = dataUrl.indexOf(',');
+  return comma >= 0 ? dataUrl.slice(comma + 1) : '';
+}
+
 export function toPaprikaRecipe(recipe, now = new Date()) {
+  const photo = photoBase64(recipe);
   const doc = {
     uid: recipe.uid || uuid(),
     name: (recipe.title || 'Untitled Recipe').trim(),
@@ -67,6 +76,7 @@ export function toPaprikaRecipe(recipe, now = new Date()) {
     photo: null,
     photo_hash: null,
     photo_large: null,
+    photo_data: null,
     scale: null,
     nutritional_info: joinLines(recipe.nutrition),
     total_time: String(recipe.totalTime || ''),
@@ -74,6 +84,11 @@ export function toPaprikaRecipe(recipe, now = new Date()) {
     categories: Array.isArray(recipe.categories) ? recipe.categories.filter(Boolean) : [],
   };
   doc.hash = contentHash(`${doc.name}${doc.ingredients}${doc.directions}`);
+  if (photo) {
+    doc.photo = `${doc.uid}.jpg`;
+    doc.photo_data = photo;
+    doc.photo_hash = contentHash(photo);
+  }
   return doc;
 }
 

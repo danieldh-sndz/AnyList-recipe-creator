@@ -21,10 +21,34 @@
         <span class="mark" aria-hidden="true"></span>
         Recipe to AnyList
       </h1>
-      <button type="button" class="link-button" id="help-toggle" aria-expanded="false" aria-controls="help">
-        How to import
-      </button>
+      <div class="app-bar-actions">
+        <button type="button" class="link-button" id="help-toggle" aria-expanded="false" aria-controls="help">
+          How to import
+        </button>
+        <button type="button" class="link-button" id="settings-toggle" aria-expanded="false" aria-controls="settings" aria-label="Settings">
+          &#9881;
+        </button>
+      </div>
     </header>
+
+    <section id="settings" class="help" hidden>
+      <h2>Settings</h2>
+      <label class="field">
+        <span class="field-label">Anthropic API key</span>
+        <input type="password" id="api-key" placeholder="sk-ant-..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+        <span class="hint">
+          Create one at console.anthropic.com. It is stored only in this browser and sent only to
+          Anthropic — generating a recipe costs a few cents.
+        </span>
+      </label>
+      <label class="check-row">
+        <input type="checkbox" id="auto-photo" checked />
+        <span>Generate a photo of each dish automatically (uses the free Pollinations image service)</span>
+      </label>
+      <div class="button-row">
+        <button type="button" class="primary" id="save-settings">Save settings</button>
+      </div>
+    </section>
 
     <section id="help" class="help" hidden>
       <h2>Getting the file into AnyList</h2>
@@ -45,7 +69,8 @@
     </section>
 
     <nav class="tabs" role="tablist">
-      <button type="button" role="tab" id="tab-paste" aria-controls="view-paste" aria-selected="true">Paste</button>
+      <button type="button" role="tab" id="tab-create" aria-controls="view-create" aria-selected="true">Create</button>
+      <button type="button" role="tab" id="tab-paste" aria-controls="view-paste" aria-selected="false">Paste</button>
       <button type="button" role="tab" id="tab-review" aria-controls="view-review" aria-selected="false">Review</button>
       <button type="button" role="tab" id="tab-library" aria-controls="view-library" aria-selected="false">
         Library <span class="count" id="library-count">0</span>
@@ -54,7 +79,41 @@
 
     <main>
       <!-- ------------------------------------------------------------ -->
-      <section id="view-paste" role="tabpanel" aria-labelledby="tab-paste" class="view is-active">
+      <section id="view-create" role="tabpanel" aria-labelledby="tab-create" class="view is-active">
+        <div class="key-card" id="key-card" hidden>
+          <h2>Ask Claude for a recipe</h2>
+          <p>
+            Describe a dish and Claude writes the full recipe — then keep chatting to scale it,
+            swap ingredients, or convert units. To start, add your Anthropic API key.
+          </p>
+          <button type="button" class="primary" id="open-settings">Add API key</button>
+        </div>
+
+        <div id="chat-log" class="chat-log" aria-live="polite"></div>
+
+        <div class="chips" id="chips" hidden>
+          <button type="button" class="chip" data-fill="Scale it to 8 servings">Scale servings</button>
+          <button type="button" class="chip" data-fill="Convert everything to metric units">Metric units</button>
+          <button type="button" class="chip" data-fill="Make it vegetarian">Vegetarian</button>
+          <button type="button" class="chip" data-fill="Suggest a substitute for ">Substitute…</button>
+        </div>
+
+        <form class="composer" id="composer">
+          <textarea
+            id="chat-input"
+            rows="1"
+            placeholder="e.g. A cozy chicken curry for 4, not too spicy"
+            enterkeyhint="send"
+          ></textarea>
+          <button type="submit" class="primary send" id="send" aria-label="Send">&#10148;</button>
+        </form>
+        <div class="button-row">
+          <button type="button" class="quiet" id="new-chat">Start a new recipe</button>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------------------ -->
+      <section id="view-paste" role="tabpanel" aria-labelledby="tab-paste" class="view">
         <label class="field">
           <span class="field-label">Recipe text</span>
           <textarea
@@ -83,6 +142,17 @@
         </p>
 
         <form id="review-form" hidden>
+          <figure class="photo" id="photo-wrap" hidden>
+            <img id="photo" alt="Photo of the finished dish" />
+            <figcaption class="photo-actions">
+              <button type="button" class="quiet" id="regen-photo">New photo</button>
+              <button type="button" class="quiet" id="remove-photo">Remove</button>
+            </figcaption>
+          </figure>
+          <div class="button-row" id="add-photo-row" hidden>
+            <button type="button" class="quiet" id="add-photo">Generate a photo of this dish</button>
+          </div>
+
           <label class="field">
             <span class="field-label">Title</span>
             <input type="text" id="f-title" autocapitalize="words" />

@@ -37,6 +37,7 @@ await page.goto(`${BASE}/index.html`, { waitUntil: 'networkidle' });
 
 // --- paste and parse ------------------------------------------------------
 
+await page.click('#tab-paste');
 await page.click('#load-sample');
 const pastedLength = await page.inputValue('#input').then((v) => v.length);
 ok(pastedLength > 400, `example text loaded (got ${pastedLength} chars)`);

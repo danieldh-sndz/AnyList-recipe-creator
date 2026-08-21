@@ -1,7 +1,7 @@
 // Caches the app shell so the app opens without a connection once installed.
 // Bump CACHE when any shell file changes.
 
-const CACHE = 'recipe-to-anylist-v1';
+const CACHE = 'recipe-to-anylist-v2';
 const SHELL = [
   './',
   'index.html',
@@ -12,6 +12,8 @@ const SHELL = [
   'js/paprika.js',
   'js/recipe-doc.js',
   'js/store.js',
+  'js/claude.js',
+  'js/imagegen.js',
   'icons/icon-180.png',
   'icons/icon-192.png',
   'icons/icon-512.png',

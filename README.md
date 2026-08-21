@@ -1,10 +1,19 @@
 # Recipe to AnyList
 
-A small web app for your iPhone. Paste the recipe an AI assistant wrote, check the
-fields, and get a file that AnyList imports directly — no retyping.
+A small web app for your iPhone that turns AI recipes into AnyList imports, two ways:
 
-Everything runs in the browser on your phone. No account, no server, and no recipe
-text ever leaves the device.
+- **Create** — ask Claude for a dish right inside the app, then keep chatting to
+  tweak it: scale the servings, substitute ingredients, convert units, make it
+  vegetarian. Every recipe comes back complete — servings, prep, cook and total
+  times, notes, nutrition — plus a realistic AI-generated photo of the finished
+  dish.
+- **Paste** — paste recipe text you got from any assistant and let the parser
+  pick out the fields.
+
+Either way you review the recipe, save it to an on-device library, and export a
+file that AnyList imports directly — photo included. There is no server: the app
+is static files, your Anthropic API key stays in your browser, and recipe data
+only ever goes to Anthropic (recipe text) and Pollinations (the photo prompt).
 
 ## Why a file instead of a direct import
 
@@ -35,6 +44,13 @@ npx http-server -p 8123 -s .
 
 ## Using it
 
+0. **Create** *(optional but the smoothest path)* — open Settings (the gear) and
+   paste an Anthropic API key from console.anthropic.com. Then describe a dish
+   ("a cozy chicken curry for 4, not too spicy") and send. Claude returns the
+   full structured recipe and the app photographs the dish. Keep chatting to
+   tweak it — "scale it to 8", "make it metric", "swap the cream for coconut
+   milk" — each reply is the complete updated recipe. Generation uses the
+   `claude-opus-5` model and costs a few cents per recipe.
 1. **Paste** — paste the recipe text and tap **Read recipe**. Markdown headings,
    bold labels, bullets, numbered steps and plain text all work.
 2. **Review** — the app fills in title, description, servings, times, ingredients,
@@ -73,17 +89,20 @@ Anything it misreads is editable on the Review tab before you export.
 ## Project layout
 
 ```
-index.html            markup for the three tabs
+index.html            markup for the four tabs
 styles.css            iPhone-first styling, light and dark
 js/app.js             UI wiring
+js/claude.js          Claude API client (structured recipe generation)
+js/imagegen.js        AI dish photos via Pollinations, resized to JPEG
 js/parser.js          pasted text -> structured recipe
 js/paprika.js         CRC32, gzip and ZIP writing
 js/recipe-doc.js      recipe -> Paprika JSON -> .paprikarecipes archive
 js/store.js           the on-device recipe library
 sw.js                 offline cache for the app shell
 tools/make-icons.py   regenerates the app icons
-tests/run.mjs         parser and file-format tests
-tests/e2e.mjs         browser test of the whole flow
+tests/run.mjs         parser, file-format and schema tests
+tests/e2e.mjs         browser test of the paste flow
+tests/e2e-create.mjs  browser test of the Create flow (API mocked)
 ```
 
 ## Tests
@@ -92,10 +111,11 @@ The format tests shell out to the real `unzip` and `gunzip`, so the archive is
 validated by tools other than the one that wrote it.
 
 ```sh
-npm test                                  # parser + file format
+npm test                                  # parser + file format + schema
 
-npx http-server -p 8123 -s . &            # browser flow, needs Playwright
-node tests/e2e.mjs
+npx http-server -p 8123 -s . &            # browser flows, need Playwright
+node tests/e2e.mjs                        # paste -> review -> export
+node tests/e2e-create.mjs                 # chat -> tweak -> photo -> export
 ```
 
 `tests/e2e.mjs` drives the real page at iPhone viewport size: it pastes a recipe,
@@ -109,3 +129,8 @@ persisted, exports, and then validates the downloaded file with `unzip` and
   Safari's website data clears the library, so export anything you want to keep.
 - The gzip step uses `CompressionStream` where it exists and falls back to a
   built-in writer on older Safari versions. Both paths are covered by tests.
+- Recipe generation calls the Anthropic Messages API directly from the browser
+  with your key (structured outputs guarantee valid recipe JSON). Dish photos
+  come from Pollinations, a free keyless image service; they are downscaled to
+  ~1024px JPEGs and embedded in the export as Paprika `photo_data`.
+- The Create tab needs a connection; the paste flow keeps working offline.
