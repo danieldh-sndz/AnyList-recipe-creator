@@ -1,39 +1,56 @@
-/* iPhone-first layout. Everything sizes from system fonts and respects the
-   safe-area insets so the app looks right when added to the Home Screen. */
+/* iOS-style design system: grouped backgrounds, system tints, hairline
+   separators, a bottom tab bar, and safe-area awareness throughout, so the
+   app feels native when added to the Home Screen. */
 
 :root {
-  --bg: #fbf7f4;
-  --surface: #ffffff;
-  --surface-2: #f3ece7;
-  --text: #24160f;
-  --text-dim: #74655c;
-  --border: #e3d8d0;
-  --accent: #b4451f;
-  --accent-text: #ffffff;
-  --danger: #a32020;
-  --shadow: 0 1px 2px rgba(53, 30, 18, 0.08), 0 8px 24px rgba(53, 30, 18, 0.06);
-  --radius: 14px;
+  --bg: #f2f2f7;                          /* systemGroupedBackground */
+  --card: #ffffff;                        /* secondarySystemGroupedBackground */
+  --fill: rgba(120, 120, 128, 0.12);      /* systemFill for inputs/chips */
+  --fill-strong: rgba(120, 120, 128, 0.2);
+  --sep: rgba(60, 60, 67, 0.29);          /* separator */
+  --label: #000000;
+  --label-2: rgba(60, 60, 67, 0.6);       /* secondaryLabel */
+  --label-3: rgba(60, 60, 67, 0.33);      /* tertiaryLabel */
+  --tint: #007aff;                        /* systemBlue */
+  --tint-fill: rgba(0, 122, 255, 0.14);
+  --on-tint: #ffffff;
+  --green: #34c759;
+  --red: #ff3b30;
+  --bubble: #e9e9eb;                      /* received-message gray */
+  --blur-bg: rgba(249, 249, 249, 0.82);
+  --radius: 12px;
+  --tabbar-h: 54px;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #171210;
-    --surface: #221b18;
-    --surface-2: #2d2420;
-    --text: #f4ece7;
-    --text-dim: #ab9a90;
-    --border: #3a2f2a;
-    --accent: #ef7847;
-    --accent-text: #2a1206;
-    --danger: #f0736b;
-    --shadow: none;
+    --bg: #000000;
+    --card: #1c1c1e;
+    --fill: rgba(120, 120, 128, 0.24);
+    --fill-strong: rgba(120, 120, 128, 0.34);
+    --sep: rgba(84, 84, 88, 0.55);
+    --label: #ffffff;
+    --label-2: rgba(235, 235, 245, 0.6);
+    --label-3: rgba(235, 235, 245, 0.32);
+    --tint: #0a84ff;
+    --tint-fill: rgba(10, 132, 255, 0.22);
+    --green: #30d158;
+    --red: #ff453a;
+    --bubble: #26262a;
+    --blur-bg: rgba(22, 22, 24, 0.82);
     color-scheme: dark;
   }
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Some components set display in CSS, which would otherwise defeat the
+   hidden attribute the app toggles everywhere. */
+[hidden] {
+  display: none !important;
 }
 
 html {
@@ -43,10 +60,10 @@ html {
 body {
   margin: 0;
   background: var(--bg);
-  color: var(--text);
-  font: 16px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  padding-bottom: env(safe-area-inset-bottom);
+  color: var(--label);
+  font: 17px/1.42 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
   overscroll-behavior-y: contain;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ---------------------------------------------------------------- app bar */
@@ -59,33 +76,40 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: calc(env(safe-area-inset-top) + 12px) 12px 12px;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: saturate(180%) blur(14px);
-  -webkit-backdrop-filter: saturate(180%) blur(14px);
-  border-bottom: 1px solid var(--border);
+  min-height: 48px;
+  padding: calc(env(safe-area-inset-top) + 8px) 14px 8px;
+  background: var(--blur-bg);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid var(--sep);
 }
 
 .app-bar h1 {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   margin: 0;
   font-size: 17px;
-  font-weight: 650;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   white-space: nowrap;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.app-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .mark {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   flex: none;
   border-radius: 6px;
-  background: var(--accent);
+  background: linear-gradient(180deg, #4da3ff 0%, #0a6cf5 100%);
   position: relative;
 }
 
@@ -93,94 +117,170 @@ body {
 .mark::after {
   content: '';
   position: absolute;
-  left: 5px;
-  right: 5px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--accent-text);
+  left: 6px;
+  right: 6px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: #ffffff;
 }
 
 .mark::before {
-  top: 7px;
+  top: 7.5px;
 }
 
 .mark::after {
-  top: 12px;
-  right: 9px;
+  top: 13.5px;
+  right: 10px;
 }
 
-/* ------------------------------------------------------------------- help */
+/* iOS-style circular toolbar buttons */
+.link-button {
+  flex: none;
+  min-height: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--fill);
+  box-shadow: none;
+  color: var(--tint);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* ---------------------------------------------------- help & settings panels */
 
 .help {
   margin: 0;
-  padding: 16px;
-  background: var(--surface-2);
-  border-bottom: 1px solid var(--border);
-}
-
-.help h2 {
-  margin: 0 0 8px;
+  padding: 16px 16px 20px;
+  background: var(--card);
+  border-bottom: 0.5px solid var(--sep);
   font-size: 15px;
 }
 
+.help h2 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+
 .help ol {
-  margin: 0;
-  padding-left: 20px;
+  margin: 0 0 4px;
+  padding-left: 22px;
 }
 
 .help li {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.help li::marker {
+  color: var(--label-2);
+  font-weight: 600;
 }
 
 .help a {
-  color: var(--accent);
-  font-weight: 600;
+  color: var(--tint);
+  text-decoration: none;
+  font-weight: 500;
 }
 
 .fine-print {
   margin: 12px 0 0;
-  color: var(--text-dim);
+  color: var(--label-2);
   font-size: 13px;
 }
 
-/* ------------------------------------------------------------------- tabs */
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+
+.check-row input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  flex: none;
+  accent-color: var(--green);
+}
+
+/* --------------------------------------------------------- bottom tab bar */
 
 .tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
   display: flex;
-  gap: 4px;
-  padding: 10px 12px 0;
+  height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  padding: 4px 8px calc(env(safe-area-inset-bottom) + 2px);
+  background: var(--blur-bg);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-top: 0.5px solid var(--sep);
 }
 
 .tabs button {
   flex: 1;
-  padding: 9px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 2px 0;
   border: 0;
-  border-radius: 10px;
   background: transparent;
-  color: var(--text-dim);
+  box-shadow: none;
+  color: var(--label-2);
   font: inherit;
-  font-size: 15px;
-  font-weight: 550;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   cursor: pointer;
+  min-height: 0;
+}
+
+.tabs button:active {
+  transform: none;
+  opacity: 0.6;
+}
+
+.tabs button svg {
+  width: 26px;
+  height: 26px;
+  stroke-width: 1.7;
 }
 
 .tabs button[aria-selected='true'] {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow);
+  color: var(--tint);
+}
+
+.tab-label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .count {
   display: inline-block;
-  min-width: 19px;
-  padding: 0 5px;
-  border-radius: 9px;
-  background: var(--accent);
-  color: var(--accent-text);
-  font-size: 12px;
-  font-weight: 650;
-  line-height: 19px;
-  vertical-align: 1px;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--tint);
+  color: var(--on-tint);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
 }
 
 .count:empty,
@@ -191,7 +291,7 @@ body {
 /* ------------------------------------------------------------------ views */
 
 main {
-  padding: 14px 12px 32px;
+  padding: 16px 16px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 24px);
 }
 
 .view {
@@ -203,16 +303,17 @@ main {
 }
 
 .empty {
-  margin: 24px 8px;
-  color: var(--text-dim);
+  margin: 48px 16px;
+  color: var(--label-2);
   text-align: center;
+  font-size: 15px;
 }
 
 /* ----------------------------------------------------------------- fields */
 
 .field {
   display: block;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .field-label {
@@ -220,26 +321,26 @@ main {
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 5px;
+  margin: 0 4px 6px;
   font-size: 13px;
-  font-weight: 600;
-  color: var(--text-dim);
+  font-weight: 400;
+  color: var(--label-2);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 
 .hint {
   display: block;
-  margin-top: 5px;
-  font-size: 12px;
+  margin: 6px 4px 0;
+  font-size: 13px;
   font-weight: 400;
-  color: var(--text-dim);
+  color: var(--label-2);
   text-transform: none;
   letter-spacing: 0;
 }
 
 .field-label .hint {
-  margin-top: 0;
+  margin: 0;
 }
 
 /* Checkboxes are excluded: the reset below strips their native appearance and
@@ -248,14 +349,20 @@ input:not([type='checkbox']),
 textarea {
   display: block;
   width: 100%;
-  padding: 11px 12px;
-  border: 1px solid var(--border);
+  padding: 12px 14px;
+  border: 0;
   border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  /* 16px keeps iOS from zooming the page when a field takes focus. */
-  font: 16px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--card);
+  color: var(--label);
+  caret-color: var(--tint);
+  /* 16px+ keeps iOS from zooming the page when a field takes focus. */
+  font: 17px/1.42 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
   -webkit-appearance: none;
+}
+
+input:not([type='checkbox'])::placeholder,
+textarea::placeholder {
+  color: var(--label-3);
 }
 
 textarea {
@@ -264,269 +371,207 @@ textarea {
 }
 
 #input {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace;
   font-size: 15px;
+  min-height: 200px;
 }
 
 input:not([type='checkbox']):focus,
 textarea:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
+  outline: 3px solid var(--tint-fill);
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 10px;
+  gap: 0 12px;
 }
 
 .more {
-  margin-bottom: 14px;
-  padding: 12px;
-  border: 1px solid var(--border);
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 0;
   border-radius: var(--radius);
-  background: var(--surface);
+  background: var(--card);
 }
 
 .more summary {
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-dim);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--tint);
+  list-style-position: outside;
 }
 
 .more[open] summary {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .more .field:last-child {
   margin-bottom: 0;
 }
 
+.more input:not([type='checkbox']),
+.more textarea {
+  background: var(--fill);
+}
+
+/* Panels sit on the card color, so their fields use the fill color instead. */
+.help input:not([type='checkbox']) {
+  background: var(--fill);
+}
+
 /* ---------------------------------------------------------------- buttons */
 
 .button-row {
   display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .button-row.sticky {
   position: sticky;
-  bottom: calc(env(safe-area-inset-bottom) + 8px);
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 10px);
   z-index: 4;
-  margin-top: 18px;
+  margin-top: 20px;
   padding: 10px 0;
-  /* Opaque, so fields scrolling underneath do not show through the buttons. */
   background: var(--bg);
-  box-shadow: 0 -14px 18px -8px var(--bg);
+  box-shadow: 0 -16px 20px -10px var(--bg);
 }
 
 button {
   flex: 1;
-  min-height: 46px;
-  padding: 11px 14px;
-  border: 1px solid var(--border);
+  min-height: 50px;
+  padding: 12px 16px;
+  border: 0;
   border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
+  background: var(--card);
+  color: var(--tint);
   font: inherit;
+  font-size: 17px;
   font-weight: 600;
+  letter-spacing: -0.02em;
   cursor: pointer;
-  box-shadow: var(--shadow);
 }
 
 button:active {
-  transform: translateY(1px);
+  opacity: 0.7;
 }
 
 button.primary {
-  border-color: transparent;
-  background: var(--accent);
-  color: var(--accent-text);
+  background: var(--tint);
+  color: var(--on-tint);
 }
 
 button.quiet {
-  box-shadow: none;
   background: transparent;
-  border-color: transparent;
-  color: var(--text-dim);
+  color: var(--tint);
   font-weight: 500;
-  min-height: 38px;
+  font-size: 15px;
+  min-height: 40px;
 }
 
 button.danger {
-  color: var(--danger);
+  color: var(--red);
   flex: 0 0 auto;
 }
 
 button:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: default;
 }
 
-.link-button {
-  flex: none;
-  min-height: 0;
-  padding: 6px 7px;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-/* ---------------------------------------------------------------- library */
-
-.library-tools {
+/* Full-width link styled as a filled button (for external links). */
+.btn-link {
   display: flex;
-  gap: 4px;
-  margin-bottom: 6px;
-}
-
-.recipe-list {
-  list-style: none;
-  margin: 0 0 4px;
-  padding: 0;
-}
-
-.recipe-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 13px 14px;
-  margin-bottom: 8px;
-  border: 1px solid var(--border);
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 12px 16px;
   border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
-
-.recipe-item input[type='checkbox'] {
-  width: 22px;
-  height: 22px;
-  margin: 2px 0 0;
-  flex: none;
-  accent-color: var(--accent);
-}
-
-.recipe-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.recipe-title {
+  background: var(--tint);
+  color: var(--on-tint);
+  font-size: 17px;
   font-weight: 600;
-  overflow-wrap: anywhere;
+  letter-spacing: -0.02em;
+  text-decoration: none;
 }
 
-.recipe-meta {
-  margin-top: 2px;
-  font-size: 13px;
-  color: var(--text-dim);
+.btn-link.secondary {
+  background: var(--tint-fill);
+  color: var(--tint);
 }
 
-.recipe-edit {
-  flex: none;
-  min-height: 0;
-  padding: 6px 10px;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  color: var(--accent);
-  font-size: 14px;
+.btn-link:active {
+  opacity: 0.7;
 }
 
 /* ------------------------------------------------------------------- chat */
 
-.app-bar-actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-#settings-toggle {
-  font-size: 18px;
-  line-height: 1;
-}
-
-.check-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 14px;
-  font-size: 14px;
-}
-
-.check-row input[type='checkbox'] {
-  width: 20px;
-  height: 20px;
-  margin-top: 1px;
-  flex: none;
-  accent-color: var(--accent);
-}
-
 .key-card {
-  padding: 18px 16px;
-  margin-bottom: 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  padding: 24px 20px;
+  margin-bottom: 16px;
+  border-radius: 16px;
+  background: var(--card);
+  text-align: center;
 }
 
 .key-card h2 {
   margin: 0 0 8px;
-  font-size: 17px;
+  font-size: 22px;
+  letter-spacing: -0.02em;
 }
 
 .key-card p {
-  margin: 0 0 14px;
-  color: var(--text-dim);
-  font-size: 14px;
+  margin: 0 0 18px;
+  color: var(--label-2);
+  font-size: 15px;
 }
 
 .chat-log {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 12px;
 }
 
 .bubble {
-  max-width: 88%;
-  padding: 10px 14px;
-  border-radius: 18px;
-  font-size: 15px;
+  max-width: 84%;
+  padding: 9px 14px;
+  border-radius: 19px;
+  font-size: 16px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
 .bubble.user {
   align-self: flex-end;
-  background: var(--accent);
-  color: var(--accent-text);
-  border-bottom-right-radius: 6px;
+  background: var(--tint);
+  color: var(--on-tint);
+  border-bottom-right-radius: 5px;
 }
 
 .bubble.assistant {
   align-self: flex-start;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-bottom-left-radius: 6px;
+  background: var(--bubble);
+  color: var(--label);
+  border-bottom-left-radius: 5px;
 }
 
 .bubble.error {
-  border-color: var(--danger);
-  color: var(--danger);
+  background: transparent;
+  border: 1px solid var(--red);
+  color: var(--red);
+  font-size: 14px;
 }
 
 .bubble.card {
   padding: 0;
   max-width: 100%;
   width: 100%;
+  border-radius: 16px;
+  background: var(--card);
   overflow: hidden;
 }
 
@@ -534,28 +579,29 @@ button:disabled {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
-  max-height: 260px;
+  max-height: 250px;
   object-fit: cover;
 }
 
 .chat-card-body {
-  padding: 12px 14px;
+  padding: 14px 16px 16px;
 }
 
 .chat-card-title {
   font-weight: 650;
-  font-size: 16px;
+  font-size: 19px;
+  letter-spacing: -0.02em;
 }
 
 .chat-card-meta {
-  margin-top: 2px;
-  color: var(--text-dim);
-  font-size: 13px;
+  margin-top: 3px;
+  color: var(--label-2);
+  font-size: 14px;
 }
 
 .chat-card-note {
-  margin-top: 6px;
-  color: var(--text-dim);
+  margin-top: 8px;
+  color: var(--label-2);
   font-size: 13px;
 }
 
@@ -564,16 +610,23 @@ button:disabled {
 }
 
 .chat-card-open {
-  margin-top: 10px;
-  width: auto;
+  margin-top: 12px;
+  width: 100%;
   flex: none;
-  min-height: 36px;
-  padding: 7px 14px;
+  min-height: 44px;
+  padding: 10px 16px;
   border-radius: 10px;
-  font-size: 14px;
-  background: var(--surface-2);
-  border-color: var(--border);
-  box-shadow: none;
+  font-size: 16px;
+  background: var(--tint-fill);
+  color: var(--tint);
+}
+
+.chat-card-note .chat-card-open {
+  width: auto;
+  min-height: 34px;
+  margin-top: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
 }
 
 .dots {
@@ -583,10 +636,10 @@ button:disabled {
 }
 
 .dots i {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: var(--text-dim);
+  background: var(--label-3);
   animation: bounce 1.2s infinite;
 }
 
@@ -600,7 +653,7 @@ button:disabled {
 
 @keyframes bounce {
   0%, 60%, 100% {
-    opacity: 0.35;
+    opacity: 0.4;
     transform: translateY(0);
   }
   30% {
@@ -613,8 +666,8 @@ button:disabled {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding-bottom: 6px;
-  margin-bottom: 8px;
+  padding: 2px 0 8px;
+  margin-bottom: 4px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -626,52 +679,54 @@ button:disabled {
 .chip {
   flex: none;
   min-height: 34px;
-  padding: 6px 13px;
+  padding: 6px 14px;
   border-radius: 17px;
-  font-size: 13px;
-  font-weight: 550;
-  background: var(--surface-2);
-  border-color: transparent;
-  box-shadow: none;
-  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--fill);
+  color: var(--label);
 }
 
 .composer {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .composer textarea {
   flex: 1;
-  border-radius: 22px;
-  max-height: 160px;
+  border-radius: 21px;
+  max-height: 150px;
+  padding: 9px 16px;
+  background: var(--card);
+  border: 0.5px solid var(--sep);
+  font-size: 16px;
 }
 
 .composer .send {
   flex: none;
-  width: 46px;
-  min-height: 46px;
+  width: 42px;
+  min-height: 42px;
   padding: 0;
   border-radius: 50%;
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1;
 }
 
 /* ------------------------------------------------------------------ photo */
 
 .photo {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
 }
 
 .photo img {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
+  max-height: 280px;
   object-fit: cover;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
+  border-radius: 16px;
 }
 
 .photo-actions {
@@ -682,12 +737,180 @@ button:disabled {
 
 .recipe-thumb {
   float: right;
-  width: 56px;
-  height: 56px;
-  margin-left: 10px;
+  width: 58px;
+  height: 58px;
+  margin-left: 12px;
   object-fit: cover;
-  border-radius: 10px;
-  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* ---------------------------------------------------------------- library */
+
+.library-tools {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.recipe-list {
+  list-style: none;
+  margin: 0 0 4px;
+  padding: 0;
+}
+
+/* Grouped-inset list: one visual card, hairlines between rows. */
+.recipe-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 13px 16px;
+  background: var(--card);
+}
+
+.recipe-item:first-child {
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+}
+
+.recipe-item:last-child {
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+}
+
+.recipe-item + .recipe-item {
+  border-top: 0.5px solid var(--sep);
+}
+
+.recipe-item input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  margin: 4px 0 0;
+  flex: none;
+  accent-color: var(--green);
+  border-radius: 50%;
+}
+
+.recipe-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.recipe-title {
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.recipe-meta {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--label-2);
+}
+
+.recipe-edit {
+  flex: none;
+  min-height: 0;
+  padding: 8px 4px 8px 10px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--tint);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.anylist-link-row {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.anylist-link-row a {
+  color: var(--tint);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+/* ----------------------------------------------------------- import sheet */
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 21;
+  padding: 10px 20px calc(env(safe-area-inset-bottom) + 20px);
+  border-radius: 18px 18px 0 0;
+  background: var(--card);
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.25);
+  animation: sheet-up 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.grabber {
+  width: 36px;
+  height: 5px;
+  margin: 0 auto 14px;
+  border-radius: 3px;
+  background: var(--fill-strong);
+}
+
+.sheet-check {
+  width: 52px;
+  height: 52px;
+  margin: 4px auto 12px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sheet-check svg {
+  width: 26px;
+  height: 26px;
+}
+
+.sheet h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.sheet p {
+  margin: 0 auto 18px;
+  max-width: 420px;
+  color: var(--label-2);
+  font-size: 15px;
+  text-align: center;
+}
+
+.sheet .btn-link {
+  margin-bottom: 10px;
+}
+
+.sheet .quiet {
+  width: 100%;
 }
 
 /* ------------------------------------------------------------------ toast */
@@ -695,25 +918,86 @@ button:disabled {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(env(safe-area-inset-bottom) + 22px);
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 18px);
   transform: translateX(-50%);
-  z-index: 20;
+  z-index: 30;
   max-width: min(92vw, 460px);
-  padding: 11px 18px;
+  padding: 11px 20px;
   border-radius: 22px;
-  background: var(--text);
-  color: var(--bg);
+  background: var(--card);
+  color: var(--label);
   font-size: 14px;
-  font-weight: 550;
+  font-weight: 500;
   text-align: center;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18), 0 0 0 0.5px var(--sep);
 }
 
 @media (min-width: 640px) {
   main,
-  .help,
-  .tabs {
+  .help {
     max-width: 620px;
     margin-inline: auto;
+  }
+
+  .sheet {
+    max-width: 560px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 18px;
+    bottom: 24px;
+  }
+
+  @keyframes sheet-up {
+    from {
+      transform: translate(-50%, 40px);
+      opacity: 0;
+    }
+    to {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+  }
+}
+
+/* -------------------------------------------------------- chat empty state */
+
+.chat-empty {
+  margin: 10vh auto 24px;
+  max-width: 340px;
+  text-align: center;
+}
+
+.chat-empty-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 14px;
+  border-radius: 16px;
+  background: var(--tint-fill);
+  color: var(--tint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-empty-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.chat-empty h2 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.chat-empty p {
+  margin: 0;
+  color: var(--label-2);
+  font-size: 15px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    animation: none;
   }
 }

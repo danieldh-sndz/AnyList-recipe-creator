@@ -1,7 +1,7 @@
 // Caches the app shell so the app opens without a connection once installed.
 // Bump CACHE when any shell file changes.
 
-const CACHE = 'recipe-to-anylist-v2';
+const CACHE = 'recipe-to-anylist-v3';
 const SHELL = [
   './',
   'index.html',

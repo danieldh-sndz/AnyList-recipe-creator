@@ -268,6 +268,7 @@ function refreshCreateState() {
   els.keyCard.hidden = hasKey;
   els.composer.hidden = !hasKey;
   els.chips.hidden = !hasKey || !conversation.some((message) => message.role === 'assistant');
+  $('chat-empty').hidden = !hasKey || els.chatLog.childElementCount > 0;
 }
 
 function addBubble(role, contentNode) {
@@ -367,6 +368,7 @@ function setChatBusy(on) {
 async function sendChat(text) {
   if (!text.trim() || chatBusy) return;
   addBubble('user', text.trim());
+  $('chat-empty').hidden = true;
   els.chatInput.value = '';
   growComposer();
   setChatBusy(true);
@@ -488,6 +490,21 @@ $('add-photo').addEventListener('click', async () => {
 
 /* ------------------------------------------------------------------ export */
 
+// The export is only half the job; this sheet walks the user through the
+// AnyList side so they are never left wondering what to do with the file.
+function openImportSheet() {
+  $('sheet-backdrop').hidden = false;
+  $('import-sheet').hidden = false;
+}
+
+function closeImportSheet() {
+  $('sheet-backdrop').hidden = true;
+  $('import-sheet').hidden = true;
+}
+
+$('sheet-done').addEventListener('click', closeImportSheet);
+$('sheet-backdrop').addEventListener('click', closeImportSheet);
+
 async function exportRecipes(recipes, { share = false } = {}) {
   if (!recipes.length) {
     toast('Select at least one recipe.');
@@ -500,6 +517,7 @@ async function exportRecipes(recipes, { share = false } = {}) {
 
     if (share && navigator.canShare?.({ files: [file] })) {
       await navigator.share({ files: [file], title: name });
+      openImportSheet();
       return;
     }
 
@@ -512,7 +530,7 @@ async function exportRecipes(recipes, { share = false } = {}) {
     link.remove();
     // Revoke late; iOS needs the URL alive while the download starts.
     setTimeout(() => URL.revokeObjectURL(url), 30000);
-    toast(`Saved ${name}. Import it at AnyList's Recipe Import page.`);
+    openImportSheet();
   } catch (error) {
     if (error?.name === 'AbortError') return; // the share sheet was dismissed
     toast(`Export failed: ${error.message}`);
@@ -598,6 +616,7 @@ function renderLibrary() {
   els.libraryEmpty.hidden = any;
   els.libraryTools.hidden = !any;
   els.libraryActions.hidden = !any;
+  $('anylist-link-row').hidden = !any;
   els.libraryCount.textContent = String(recipes.length);
   els.libraryCount.dataset.zero = String(!any);
 }

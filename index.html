@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Recipe to AnyList</title>
     <meta name="description" content="Paste an AI-written recipe and get a file AnyList can import." />
-    <meta name="theme-color" content="#b4451f" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1b1512" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Recipe to AnyList" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -22,8 +22,8 @@
         Recipe to AnyList
       </h1>
       <div class="app-bar-actions">
-        <button type="button" class="link-button" id="help-toggle" aria-expanded="false" aria-controls="help">
-          How to import
+        <button type="button" class="link-button" id="help-toggle" aria-expanded="false" aria-controls="help" aria-label="How to import">
+          ?
         </button>
         <button type="button" class="link-button" id="settings-toggle" aria-expanded="false" aria-controls="settings" aria-label="Settings">
           &#9881;
@@ -51,29 +51,54 @@
     </section>
 
     <section id="help" class="help" hidden>
-      <h2>Getting the file into AnyList</h2>
+      <h2>How it works</h2>
       <ol>
-        <li>Paste your recipe here and tap <strong>Read recipe</strong>.</li>
-        <li>Check the fields, then tap <strong>Save to library</strong>.</li>
-        <li>On the Library tab, tap <strong>Export</strong> to save a <code>.paprikarecipes</code> file to Files.</li>
-        <li>
-          Open AnyList's <strong>Recipe Import</strong> page in Safari, sign in, choose the file you
-          just saved, and tap Import Recipes. The steps are on
-          <a href="https://help.anylist.com/articles/paprika-import/" target="_blank" rel="noopener">AnyList's help page</a>.
-        </li>
+        <li><strong>Create</strong> a recipe with Claude, or <strong>Paste</strong> one you already have.</li>
+        <li><strong>Review</strong> the fields, then save it to your <strong>Library</strong>.</li>
+        <li>Tap <strong>Export</strong> — the recipe file is saved to Files (usually Downloads).</li>
+        <li>Tap <strong>Open AnyList Import</strong>, sign in, choose the file, and tap Import Recipes.</li>
       </ol>
+      <a class="btn-link" href="https://www.anylist.com/import" target="_blank" rel="noopener">
+        Open AnyList Recipe Import
+      </a>
       <p class="fine-print">
-        AnyList reads the Paprika recipe format, so that is what this app writes. Everything happens
-        on your phone — no recipe text is ever uploaded anywhere.
+        Full steps are on
+        <a href="https://help.anylist.com/articles/paprika-import/" target="_blank" rel="noopener">AnyList's help page</a>.
+        AnyList reads the Paprika recipe format, so that is what this app writes. Your recipes stay
+        on your phone; the only things sent anywhere are your prompt (to Anthropic) and the photo
+        description (to the image service).
       </p>
     </section>
 
     <nav class="tabs" role="tablist">
-      <button type="button" role="tab" id="tab-create" aria-controls="view-create" aria-selected="true">Create</button>
-      <button type="button" role="tab" id="tab-paste" aria-controls="view-paste" aria-selected="false">Paste</button>
-      <button type="button" role="tab" id="tab-review" aria-controls="view-review" aria-selected="false">Review</button>
+      <button type="button" role="tab" id="tab-create" aria-controls="view-create" aria-selected="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 4.5l1.9 4.6 4.6 1.9-4.6 1.9L12 17.5l-1.9-4.6-4.6-1.9 4.6-1.9z" />
+          <path d="M19 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" />
+        </svg>
+        <span class="tab-label">Create</span>
+      </button>
+      <button type="button" role="tab" id="tab-paste" aria-controls="view-paste" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="5" y="4.5" width="14" height="17" rx="2.5" />
+          <path d="M9 4.5V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v.5" />
+          <path d="M9 11h6M9 15h4" />
+        </svg>
+        <span class="tab-label">Paste</span>
+      </button>
+      <button type="button" role="tab" id="tab-review" aria-controls="view-review" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5H6.5A2.5 2.5 0 0 0 4 7.5v10A2.5 2.5 0 0 0 6.5 20h10a2.5 2.5 0 0 0 2.5-2.5V12" />
+          <path d="M17.8 3.6a1.9 1.9 0 0 1 2.7 2.7L12 14.8 8.5 15.5 9.2 12z" />
+        </svg>
+        <span class="tab-label">Review</span>
+      </button>
       <button type="button" role="tab" id="tab-library" aria-controls="view-library" aria-selected="false">
-        Library <span class="count" id="library-count">0</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 4h4v16H5zM11 4h4v16h-4z" />
+          <path d="M16.6 4.8l3.6 15" />
+        </svg>
+        <span class="tab-label">Library <span class="count" id="library-count">0</span></span>
       </button>
     </nav>
 
@@ -89,6 +114,19 @@
           <button type="button" class="primary" id="open-settings">Add API key</button>
         </div>
 
+        <div class="chat-empty" id="chat-empty">
+          <div class="chat-empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" />
+            </svg>
+          </div>
+          <h2>What should we cook?</h2>
+          <p>
+            Describe a dish and Claude writes the whole recipe, photo included.
+            Then keep chatting — scale it, swap ingredients, or convert the units.
+          </p>
+        </div>
+
         <div id="chat-log" class="chat-log" aria-live="polite"></div>
 
         <div class="chips" id="chips" hidden>
@@ -102,7 +140,7 @@
           <textarea
             id="chat-input"
             rows="1"
-            placeholder="e.g. A cozy chicken curry for 4, not too spicy"
+            placeholder="Describe a dish…"
             enterkeyhint="send"
           ></textarea>
           <button type="submit" class="primary send" id="send" aria-label="Send">&#10148;</button>
@@ -246,6 +284,12 @@
 
         <ul class="recipe-list" id="library-list"></ul>
 
+        <div class="anylist-link-row" id="anylist-link-row" hidden>
+          <a href="https://www.anylist.com/import" target="_blank" rel="noopener">
+            Open AnyList Recipe Import &#8599;
+          </a>
+        </div>
+
         <div class="button-row sticky" id="library-actions" hidden>
           <button type="button" class="primary" id="export-selected">Export selected</button>
           <button type="button" id="share-selected" hidden>Share</button>
@@ -253,6 +297,29 @@
         </div>
       </section>
     </main>
+
+    <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
+    <section class="sheet" id="import-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
+      <div class="grabber" aria-hidden="true"></div>
+      <div class="sheet-check" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4.5 12.5l5 5 10-11" />
+        </svg>
+      </div>
+      <h2 id="sheet-title">Recipe file saved</h2>
+      <p id="sheet-text">
+        Now bring it into AnyList: open the import page, sign in, tap
+        <strong>Choose File</strong> and pick the file from Downloads, then tap
+        <strong>Import Recipes</strong>.
+      </p>
+      <a class="btn-link" id="sheet-anylist" href="https://www.anylist.com/import" target="_blank" rel="noopener">
+        Open AnyList Recipe Import
+      </a>
+      <a class="btn-link secondary" href="https://help.anylist.com/articles/paprika-import/" target="_blank" rel="noopener">
+        View the step-by-step guide
+      </a>
+      <button type="button" class="quiet" id="sheet-done">Done</button>
+    </section>
 
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 

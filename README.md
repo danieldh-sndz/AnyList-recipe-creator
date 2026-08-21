@@ -60,11 +60,12 @@ npx http-server -p 8123 -s .
    can collect several and export them in one file. Tap **Export selected** to
    save the `.paprikarecipes` file to Files.
 
-Then import it into AnyList:
-
-1. Open AnyList's **Recipe Import** page in Safari and sign in. The steps are on
-   [AnyList's help page](https://help.anylist.com/articles/paprika-import/).
-2. Choose the file you saved and tap **Import Recipes**.
+Then import it into AnyList — the app walks you through it. After every export a
+sheet appears with an **Open AnyList Recipe Import** button (it links to
+[anylist.com/import](https://www.anylist.com/import); the same link lives on the
+Library tab and in the help panel). Sign in, tap **Choose File**, pick the file
+from Downloads, and tap **Import Recipes** — the steps are also on
+[AnyList's help page](https://help.anylist.com/articles/paprika-import/).
 
 The recipes land in your AnyList account and sync to every device on it.
 
@@ -134,3 +135,6 @@ persisted, exports, and then validates the downloaded file with `unzip` and
   come from Pollinations, a free keyless image service; they are downscaled to
   ~1024px JPEGs and embedded in the export as Paprika `photo_data`.
 - The Create tab needs a connection; the paste flow keeps working offline.
+- The UI follows the iOS design language — system colors and dynamic light/dark,
+  a bottom tab bar, grouped cards, and iMessage-style chat — so it feels native
+  once added to the Home Screen.

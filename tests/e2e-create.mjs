@@ -21,9 +21,10 @@ function ok(condition, label) {
   else failures.push(label);
 }
 
-// A real 1x1 JPEG, served as the "generated" dish photo.
-const TINY_JPEG = Buffer.from(
-  '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/9oADAMBAAIRAxEAPwD3+iiigD/9k=',
+// A small real PNG served as the "generated" dish photo; the app decodes it
+// and re-encodes to JPEG through a canvas, exercising the whole pipeline.
+const TINY_IMAGE = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAIAAABxZ0isAAAAEUlEQVR42mN40WWFFTEMpAQApU9QQeZHOswAAAAASUVORK5CYII=',
   'base64',
 );
 
@@ -112,8 +113,8 @@ await page.route('https://image.pollinations.ai/**', async (route) => {
   await route.fulfill({
     status: 200,
     headers: { 'access-control-allow-origin': '*' },
-    contentType: 'image/jpeg',
-    body: TINY_JPEG,
+    contentType: 'image/png',
+    body: TINY_IMAGE,
   });
 });
 
@@ -196,6 +197,13 @@ const [download] = await Promise.all([
 ]);
 const downloadPath = join(workDir, 'export.paprikarecipes');
 await download.saveAs(downloadPath);
+
+await page.waitForSelector('#import-sheet:not([hidden])');
+ok(
+  (await page.getAttribute('#sheet-anylist', 'href')) === 'https://www.anylist.com/import',
+  'import sheet links to the AnyList import page',
+);
+await page.click('#sheet-done');
 
 execFileSync('unzip', ['-t', downloadPath]);
 const dest = join(workDir, 'extract');

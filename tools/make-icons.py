@@ -14,9 +14,9 @@ from pathlib import Path
 SIZES = (180, 192, 512)
 SUPERSAMPLE = 4  # rendered large, then box-filtered down for smooth edges
 
-TOP = (0xC9, 0x53, 0x26)
-BOTTOM = (0x9C, 0x37, 0x16)
-INK = (0xFF, 0xF6, 0xF1)
+TOP = (0x4D, 0xA3, 0xFF)
+BOTTOM = (0x0A, 0x6C, 0xF5)
+INK = (0xFF, 0xFF, 0xFF)
 
 # Three list rows: a bullet and a bar, the last bar shorter. Unit coordinates.
 ROWS = ((0.300, 0.795), (0.500, 0.795), (0.700, 0.640))

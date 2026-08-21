@@ -102,6 +102,15 @@ try {
   ok(false, `unzip rejected the downloaded file: ${error.message}`);
 }
 
+// The guided import sheet appears after every export.
+await page.waitForSelector('#import-sheet:not([hidden])');
+ok(
+  (await page.getAttribute('#sheet-anylist', 'href')) === 'https://www.anylist.com/import',
+  'import sheet links to the AnyList import page',
+);
+await page.click('#sheet-done');
+await page.waitForSelector('#import-sheet', { state: 'hidden' });
+
 const dest = join(workDir, 'extract');
 execFileSync('unzip', ['-o', '-q', downloadPath, '-d', dest]);
 const files = readdirSync(dest);
