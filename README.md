@@ -30,7 +30,11 @@ with no dependencies.
 
 1. Publish the app. The included GitHub Actions workflow deploys it to GitHub
    Pages — in the repository, open **Settings → Pages** and set **Source** to
-   **GitHub Actions**. The next push to `main` publishes it.
+   **GitHub Actions**. Pushes to `main` (or the repository's default branch)
+   run the tests and publish the site. Note: GitHub's `github-pages`
+   environment only accepts deployments from the default branch, so if `main`
+   is not the default, either switch it (Settings → General → Default branch)
+   or the deploy will run from the default branch instead.
 2. Open the published URL in Safari on your iPhone.
 3. Tap the Share button, then **Add to Home Screen**. It now opens full screen
    like an app and works with no connection.
